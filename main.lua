@@ -66,7 +66,12 @@ local config = {
     bits      = {
         r = 0,
         g = 0,
-        b = 0
+        b = 0,
+        total = {
+            r = 0,
+            g = 0,
+            b = 0
+        }
     },
     background = {
         color = {
@@ -81,12 +86,16 @@ local style = {
     fg = 0,
     bg = 1,
 
-    set_color = function(self, mode, active)
+    set_color = function(self, mode, active, r, g, b)
         if mode == self.fg then
             if active then
                 love.graphics.setColor(0.0, 0.0, 0.0)
             else
-                love.graphics.setColor(1.0, 1.0, 1.0)
+                if r and g and b then
+                    love.graphics.setColor(r, g, b)
+                else
+                    love.graphics.setColor(1.0, 1.0, 1.0)
+                end
             end
         else
             if active then
@@ -122,24 +131,24 @@ local ui = {
 
         style:set_color(style.bg, a)
         love.graphics.rectangle("fill", x, self.height, width, self.height)
-        style:set_color(style.fg, a)
-        love.graphics.printf("R: "..config.bits.r, x, self.height, width, "center")
+        style:set_color(style.fg, a, 1.0, 0.0, 0.0)
+        love.graphics.printf("R "..config.bits.r, x, self.height, width, "center")
 
         i = i + 1
         a = self.active == i
 
         style:set_color(style.bg, a)
         love.graphics.rectangle("fill", x + width * i, self.height, width, self.height)
-        style:set_color(style.fg, a)
-        love.graphics.printf("G: "..config.bits.g, x + width * i, self.height, width, "center")
+        style:set_color(style.fg, a, 0.0, 1.0, 0.0)
+        love.graphics.printf("G "..config.bits.g, x + width * i, self.height, width, "center")
 
         i = i + 1
         a = self.active == i
 
         style:set_color(style.bg, a)
         love.graphics.rectangle("fill", x + width * i, self.height, width, self.height)
-        style:set_color(style.fg, a)
-        love.graphics.printf("B: "..config.bits.b, x + width * i, self.height, width, "center")
+        style:set_color(style.fg, a, 0.0, 0.0, 1.0)
+        love.graphics.printf("B "..config.bits.b, x + width * i, self.height, width, "center")
 
         love.graphics.setColor(config.background.color.r, config.background.color.g, config.background.color.b)
         love.graphics.line(x, self.height, x + width * 3, self.height)
@@ -149,13 +158,18 @@ local ui = {
 
     draw_color = function(self, x, width)
         style:set_color(style.bg, false)
-        love.graphics.rectangle("fill", x, 0, width, self.height)
+        love.graphics.rectangle("fill", x, 0, width * 0.3, self.height)
         style:set_color(style.fg, false)
-        love.graphics.printf("COLOR MODE", x, 0, width, "center")
+        love.graphics.printf("MODE", x, 0, width * 0.3, "center")
 
-        style:set_color(style.bg, self.active == 4)
+        style:set_color(style.bg, false)
+        love.graphics.rectangle("fill", x + width * 0.3, 0, width * 0.7, self.height)
+        style:set_color(style.fg, false)
+        love.graphics.printf("COLOR", x + width * 0.3, 0, width * 0.7, "center")
+
+        style:set_color(style.bg, self.active == 3)
         love.graphics.rectangle("fill", x, self.height, width * 0.3, self.height)
-        style:set_color(style.fg, self.active == 4)
+        style:set_color(style.fg, self.active == 3)
         love.graphics.printf(config.modes.rgb.text, x, self.height, width * 0.3, "center")
 
         love.graphics.setColor(self.color.x, self.color.y, self.color.z)
@@ -165,7 +179,7 @@ local ui = {
 
         love.graphics.setColor(config.background.color.r, config.background.color.g, config.background.color.b)
         love.graphics.line(x, self.height, x + width, self.height)
-        love.graphics.line(x + width * 0.3, self.height, x + width * 0.3, self.height * 2)
+        love.graphics.line(x + width * 0.3, 0, x + width * 0.3, self.height * 2)
     end,
 
     draw = function(self)
@@ -242,24 +256,28 @@ local ui = {
 }
 
 love.load = function(args)
-    config.bits.r = 2 ^ 3
-    config.bits.g = 2 ^ 3
-    config.bits.b = 2 ^ 2
+    config.bits.r = 3
+    config.bits.g = 3
+    config.bits.b = 2
 
-    image.width  = config.bits.r * config.bits.b
-    image.height = config.bits.g
+    config.bits.total.r = 2 ^ config.bits.r
+    config.bits.total.g = 2 ^ config.bits.g
+    config.bits.total.b = 2 ^ config.bits.b
+
+    image.width  = config.bits.total.r * config.bits.total.b
+    image.height = config.bits.total.g
 
     image.data = love.image.newImageData(image.width, image.height)
 
-    for y = 0, config.bits.g - 1 do
-        for x1 = 0, config.bits.r - 1 do
-            for x2 = 0, config.bits.b - 1 do
+    for y = 0, config.bits.total.g - 1 do
+        for x1 = 0, config.bits.total.r - 1 do
+            for x2 = 0, config.bits.total.b - 1 do
                 image.data:setPixel(
-                    x1 * config.bits.b + x2,
+                    x1 * config.bits.total.b + x2,
                     y,
-                    1 / (config.bits.r - 1) * x1,
-                    1 / (config.bits.g - 1) * y,
-                    1 / (config.bits.b - 1) * x2,
+                    1 / (config.bits.total.r - 1) * x1,
+                    1 / (config.bits.total.g - 1) * y,
+                    1 / (config.bits.total.b - 1) * x2,
                     1.0
                 )
             end
