@@ -1,4 +1,4 @@
--- matexture
+-- matexture (gui)
 
 love.conf = function(t)
     t.identity              = "matexture"

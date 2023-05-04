@@ -1,4 +1,4 @@
--- matexture
+-- matexture (gui)
 
 local window = {
     width  = 0,
@@ -383,8 +383,6 @@ love.load = function(args)
             end
         end
     end
-
-    image.data:encode("png", "colors.png")
 
     love.window.maximize()
 
