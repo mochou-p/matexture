@@ -36,6 +36,8 @@ local image = {
     end,
 
     update_data = function(self, r, g, b)
+        self.data:release()
+
         self.data = love.image.newImageData(self.width, self.height)
 
         for y = 0, g - 1 do
@@ -54,6 +56,13 @@ local image = {
         end
     end,
 
+    update_image = function(self)
+        self.drawable:release()
+
+        self.drawable = love.graphics.newImage(self.data)
+        self.drawable:setFilter("nearest", "nearest")
+    end,
+
     update = function(self, r, g, b)
         self.width  = r * b
         self.height = g
@@ -61,9 +70,7 @@ local image = {
         self:center_image()
 
         self:update_data(r, g, b)
-
-        self.drawable = love.graphics.newImage(self.data)
-        self.drawable:setFilter("nearest", "nearest")
+        self:update_image()
     end,
 
     draw = function(self)
@@ -130,13 +137,18 @@ local config = {
     },
 
     update_bit = function(self, n, d)
-        if n == 0 and self.bits.r + d >= 0 then self.bits.r = self.bits.r + d end
-        if n == 1 and self.bits.g + d >= 0 then self.bits.g = self.bits.g + d end
-        if n == 2 and self.bits.b + d >= 0 then self.bits.b = self.bits.b + d end
-
-        self.bits.total.r = 2 ^ self.bits.r
-        self.bits.total.g = 2 ^ self.bits.g
-        self.bits.total.b = 2 ^ self.bits.b
+        if n == 0 and self.bits.r + d >= 0 then
+            self.bits.r = self.bits.r + d
+            self.bits.total.r = 2 ^ self.bits.r
+        end
+        if n == 1 and self.bits.g + d >= 0 then
+            self.bits.g = self.bits.g + d
+            self.bits.total.g = 2 ^ self.bits.g
+        end
+        if n == 2 and self.bits.b + d >= 0 then
+            self.bits.b = self.bits.b + d
+            self.bits.total.b = 2 ^ self.bits.b
+        end
 
         image:update(self.bits.total.r, self.bits.total.g, self.bits.total.b)
     end
