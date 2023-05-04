@@ -6,7 +6,12 @@ local window = {
     ratio  = {
         width  = 0,
         height = 0
-    }
+    },
+
+    update_ratio = function(self, width, height)
+        self.ratio.width  = self.width  / width
+        self.ratio.height = self.height / height
+    end
 }
 
 local image = {
@@ -17,6 +22,49 @@ local image = {
     y        = 0,
     width    = 0,
     height   = 0,
+
+    center_image = function(self)
+        window:update_ratio(self.width, self.height)
+
+        if self.height * window.ratio.width > window.height then
+            self.scale = window.ratio.height
+            self.x     = (window.width  * 0.5 / self.scale) - (self.width  * 0.5)
+        else
+            self.scale = window.ratio.width
+            self.y     = (window.height * 0.5 / self.scale) - (self.height * 0.5)
+        end
+    end,
+
+    update_data = function(self, r, g, b)
+        self.data = love.image.newImageData(self.width, self.height)
+
+        for y = 0, g - 1 do
+            for x1 = 0, r - 1 do
+                for x2 = 0, b - 1 do
+                    self.data:setPixel(
+                        x1 * b + x2,
+                        y,
+                        1 / (r - 1) * x1,
+                        1 / (g - 1) * y,
+                        1 / (b - 1) * x2,
+                        1.0
+                    )
+                end
+            end
+        end
+    end,
+
+    update = function(self, r, g, b)
+        self.width  = r * b
+        self.height = g
+
+        self:center_image()
+
+        self:update_data(r, g, b)
+
+        self.drawable = love.graphics.newImage(self.data)
+        self.drawable:setFilter("nearest", "nearest")
+    end,
 
     draw = function(self)
         love.graphics.setColor(1.0, 1.0, 1.0)
@@ -79,7 +127,19 @@ local config = {
             g = 0.11,
             b = 0.14
         }
-    }
+    },
+
+    update_bit = function(self, n, d)
+        if n == 0 and self.bits.r + d >= 0 then self.bits.r = self.bits.r + d end
+        if n == 1 and self.bits.g + d >= 0 then self.bits.g = self.bits.g + d end
+        if n == 2 and self.bits.b + d >= 0 then self.bits.b = self.bits.b + d end
+
+        self.bits.total.r = 2 ^ self.bits.r
+        self.bits.total.g = 2 ^ self.bits.g
+        self.bits.total.b = 2 ^ self.bits.b
+
+        image:update(self.bits.total.r, self.bits.total.g, self.bits.total.b)
+    end
 }
 
 local style = {
@@ -247,7 +307,35 @@ local ui = {
     end,
 
     update_selected = function(self, key)
-        print(key)
+        local dx = (key == "right" or key == "d")
+            and 1
+            or (
+                (key == "left" or key == "a")
+                and -1
+                or 0
+            )
+
+        local dy = (key == "up" or key == "w")
+            and 1
+            or (
+                (key == "down" or key == "s")
+                and -1
+                or 0
+            )
+
+        if dx ~= 0 then
+            self.active = self.active + dx
+
+            if self.active < 0 or self.active > 3 then
+                self.active = self.active % 4
+            end
+        end
+
+        if dy ~= 0 then
+            if self.active >= 0 and self.active < 3 then
+                config:update_bit(self.active, dy)
+            end
+        end
     end,
 
     keypressed = function(self, key)
