@@ -3,12 +3,9 @@
 love.conf = function(t)
     t.identity              = "matexture"
     t.appendidentity        = false
-
     t.console               = true
-
     t.accelerometerjoystick = true
     t.audio.mixwithsystem   = true
-
     t.window.title          = "Untitled"
     t.window.icon           = nil
     t.window.width          = 800
@@ -18,14 +15,12 @@ love.conf = function(t)
     t.window.minheight      = 1
     t.window.vsync          = 1
     t.window.msaa           = 0
-
     t.modules.audio         = false
     t.modules.data          = false
     t.modules.joystick      = false
     t.modules.math          = false
     t.modules.physics       = false
     t.modules.sound         = false
-    t.modules.system        = false
     t.modules.thread        = false
     t.modules.timer         = false
     t.modules.touch         = false

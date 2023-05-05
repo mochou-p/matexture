@@ -1,8 +1,18 @@
 -- matexture (cli)
 
-require("io")
+local io = require("io")
+local os = require("os")
 
 love.load = function(args)
+    local identity = "%appdata%/love/"..love.filesystem.getIdentity().."/"
+    local path     = "matexture_"..table.concat(args, "_")..".png"
+
+    if love.filesystem.getInfo(path) then
+        io.write(path.." already exists in "..identity)
+        love.event.quit()
+        os.exit(1, true)
+    end
+
     local r = 2 ^ tonumber(args[1])
     local g = 2 ^ tonumber(args[2])
     local b = 2 ^ tonumber(args[3])
@@ -26,12 +36,12 @@ love.load = function(args)
             end
         end
 
-        io.write("generating.. ("..math.floor((y / (g-1) * 100) + 0.5).."%)\r")
+        io.write("generating.. ("..math.floor((y / (g - 1) * 100) + 0.5).."%)\r")
     end
 
     io.write("\nencoding..         ")
-    data:encode("png", "matexture_"..table.concat(args, "_")..".png")
+    data:encode("png", path)
 
-    print("\nsaved in %appdata%/love/"..love.filesystem.getIdentity().."/")
+    io.write("\nsaved in "..identity)
     love.event.quit()
 end

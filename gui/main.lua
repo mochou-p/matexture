@@ -1,5 +1,7 @@
 -- matexture (gui)
 
+local io = require("io")
+
 local window = {
     width  = 0,
     height = 0,
@@ -306,11 +308,9 @@ local ui = {
         if config.mode == config.modes.rgb_normalized.index then
             self.color.text.str = self.color.x..", "..self.color.y..", "..self.color.z
         elseif config.mode == config.modes.rgb.index then
-            self.color.text.str = math.floor(self.color.x * 255 + 0.5)
-                ..", "
-                ..math.floor(self.color.y * 255 + 0.5)
-                ..", "
-                ..math.floor(self.color.z * 255 + 0.5)
+            self.color.text.str = math.floor(self.color.x * 255 + 0.5)..", "..
+            math.floor(self.color.y * 255 + 0.5)..", "..
+            math.floor(self.color.z * 255 + 0.5)
         end
     end,
 
@@ -355,6 +355,31 @@ local ui = {
     end
 }
 
+local utils = {
+    shortcuts = function(self, key)
+        if love.keyboard.isDown("lctrl") then
+            if key == "c" and love.system.getClipboardText() ~= ui.color.text.str then
+                love.system.setClipboardText(ui.color.text.str)
+                return true
+            end
+
+            if key == "s" then
+                local path = "matexture_"..
+                    config.bits.r.."_"..
+                    config.bits.g.."_"..
+                    config.bits.b.."_"..
+                    ".png"
+
+                if not love.filesystem.getInfo(path) then
+                    image.data:encode("png", path)
+                end
+
+                return true
+            end
+        end
+    end
+}
+
 love.load = function(args)
     config.bits.r = 3
     config.bits.g = 3
@@ -384,6 +409,9 @@ love.load = function(args)
         end
     end
 
+    image.drawable = love.graphics.newImage(image.data)
+    image.drawable:setFilter("nearest", "nearest")
+
     love.window.maximize()
 
     window.width  = love.graphics.getWidth()
@@ -399,9 +427,6 @@ love.load = function(args)
         image.scale = window.ratio.width
         image.y     = (window.height * 0.5 / image.scale) - (image.height * 0.5)
     end
-
-    image.drawable = love.graphics.newImage(image.data)
-    image.drawable:setFilter("nearest", "nearest")
 
     love.graphics.setBackgroundColor(config.background.color.r, config.background.color.g, config.background.color.b)
     love.graphics.setLineWidth(3)
@@ -422,5 +447,6 @@ love.keypressed = function(key)
         love.event.quit(0)
     end
 
+    if utils:shortcuts(key) then return end
     ui:keypressed(key)
 end
